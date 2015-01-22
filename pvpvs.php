@@ -1,6 +1,7 @@
 <?php
 //PATH=/usr/sbin:/usr/bin:/sbin:/bin
 
+// auradata
 $link = mysqli_connect("localhost", "mysqlUser", "mysqlPassword", "mysqlDatabase");
 if (mysqli_connect_errno()) {
 	printf("Connect failed: %s\n", mysqli_connect_error());
