@@ -10,11 +10,13 @@ if ($argc == 5){
 	define('MQ_TIMEOUT', 2);
 	require '/path/to/lib/MinecraftRcon.class.php';
 	// mysql
+	// xauth
 	$link = mysqli_connect("localhost", "mysqlUser", "mysqlPassword", "mysqlDatabase");
 	if (mysqli_connect_errno())
 	{
 		exit();
 	}
+	// auradata
 	$link2 = mysqli_connect("localhost", "mysqlUser", "mysqlPassword", "mysqlDatabase");
 	if (mysqli_connect_errno())
 	{
