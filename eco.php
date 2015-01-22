@@ -15,7 +15,7 @@ if ($argc == 5){
 	{
 		exit();
 	}
-	$link = mysqli_connect("localhost", "mysqlUser", "mysqlPassword", "mysqlDatabase");
+	$link2 = mysqli_connect("localhost", "mysqlUser", "mysqlPassword", "mysqlDatabase");
 	if (mysqli_connect_errno())
 	{
 		exit();
