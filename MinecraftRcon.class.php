@@ -33,16 +33,13 @@ class MinecraftRcon
 	
 	public function Connect( $Ip, $Port = 25575, $Password, $Timeout = 3 )
 	{
-		$this->RequestId = 0;
-		
+		$this->RequestId = 0;	
 		if( $this->Socket = @FSockOpen( $Ip, (int)$Port ) )
 		{
-			Socket_Set_TimeOut( $this->Socket, $Timeout );
-			
+			Socket_Set_TimeOut( $this->Socket, $Timeout );		
 			if( !$this->Auth( $Password ) )
 			{
-				$this->Disconnect( );
-				
+				$this->Disconnect( );			
 				throw new MinecraftRconException( "Authorization failed." );
 			}
 		}
@@ -56,8 +53,7 @@ class MinecraftRcon
 	{
 		if( $this->Socket )
 		{
-			FClose( $this->Socket );
-			
+			FClose( $this->Socket );		
 			$this->Socket = null;
 		}
 	}
@@ -67,15 +63,12 @@ class MinecraftRcon
 		if( !$this->WriteData( self :: SERVERDATA_EXECCOMMAND, $String ) )
 		{
 			return false;
-		}
-		
-		$Data = $this->ReadData( );
-		
+		}	
+		$Data = $this->ReadData( );	
 		if( $Data[ 'RequestId' ] < 1 || $Data[ 'Response' ] != self :: SERVERDATA_RESPONSE_VALUE )
 		{
 			return false;
-		}
-		
+		}	
 		return $Data[ 'String' ];
 	}
 	
@@ -84,10 +77,8 @@ class MinecraftRcon
 		if( !$this->WriteData( self :: SERVERDATA_AUTH, $Password ) )
 		{
 			return false;
-		}
-		
-		$Data = $this->ReadData( );
-		
+		}	
+		$Data = $this->ReadData( );	
 		return $Data[ 'RequestId' ] > -1 && $Data[ 'Response' ] == self :: SERVERDATA_AUTH_RESPONSE;
 	}
 	
@@ -97,26 +88,20 @@ class MinecraftRcon
 		
 		$Size = FRead( $this->Socket, 4 );
 		$Size = UnPack( 'V1Size', $Size );
-		$Size = $Size[ 'Size' ];
-		
-		// TODO: Add multiple packets (Source)
-		
+		$Size = $Size[ 'Size' ];	
+		// TODO: Add multiple packets (Source)	
 		$Packet = FRead( $this->Socket, $Size );
-		$Packet = UnPack( 'V1RequestId/V1Response/a*String/a*String2', $Packet );
-		
+		$Packet = UnPack( 'V1RequestId/V1Response/a*String/a*String2', $Packet );	
 		return $Packet;
 	}
 	
 	private function WriteData( $Command, $String = "" )
 	{
 		// Pack the packet together
-		$Data = Pack( 'VV', $this->RequestId++, $Command ) . $String . "\x00\x00\x00"; 
-		
+		$Data = Pack( 'VV', $this->RequestId++, $Command ) . $String . "\x00\x00\x00"; 		
 		// Prepend packet length
-		$Data = Pack( 'V', StrLen( $Data ) ) . $Data;
-		
-		$Length = StrLen( $Data );
-		
+		$Data = Pack( 'V', StrLen( $Data ) ) . $Data;		
+		$Length = StrLen( $Data );		
 		return $Length === FWrite( $this->Socket, $Data, $Length );
 	}
 }

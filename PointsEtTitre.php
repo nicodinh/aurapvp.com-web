@@ -41,40 +41,33 @@
 
 	// xauth
 	$link = mysqli_connect("localhost", "mysqlUser", "mysqlPassword", "mysqlDatabase");
-	if (mysqli_connect_errno())
-	{
+	if (mysqli_connect_errno()) {
 		exit();
 	}
 	// auradata
 	$link2 = mysqli_connect("localhost", "mysqlUser", "mysqlPassword", "mysqlDatabase");
-	if (mysqli_connect_errno())
-	{
+	if (mysqli_connect_errno())	{
 		exit();
 	}
 	// stats
 	$link3 = mysqli_connect("localhost", "mysqlUser", "mysqlPassword", "mysqlDatabase");
-	if (mysqli_connect_errno())
-	{
+	if (mysqli_connect_errno())	{
 		exit();
 	}
 	// mcmmo
 	$link4 = mysqli_connect("localhost", "mysqlUser", "mysqlPassword", "mysqlDatabase");
-	if (mysqli_connect_errno())
-	{
+	if (mysqli_connect_errno())	{
 		exit();
 	}
 	// tf2
 	$link5 = mysqli_connect("localhost", "mysqlUser", "mysqlPassword", "mysqlDatabase");
-	if (mysqli_connect_errno())
-	{
+	if (mysqli_connect_errno())	{
 		exit();
 	}
 	
 	$query = "SELECT `playername` FROM `accounts` where `active` = 1 order by `playername` asc";
-	if ($resultGlobal = mysqli_query($link, $query))
-	{
-		while ($rowGlobal = mysqli_fetch_assoc($resultGlobal))
-		{
+	if ($resultGlobal = mysqli_query($link, $query)) {
+		while ($rowGlobal = mysqli_fetch_assoc($resultGlobal)) {
 			$playername = $rowGlobal["playername"];
 			$kills = 0;
 			$deaths = 0;
@@ -83,48 +76,41 @@
 			$points = 0;
 			// kills general
 			$query = "SELECT `amount` FROM `Stats_kill` WHERE `type` = 'Player' AND `player` = '" . $playername . "'";			
-			if ($result = mysqli_query($link3, $query))
-			{
+			if ($result = mysqli_query($link3, $query))	{
 				$row = mysqli_fetch_assoc($result);
 				mysqli_free_result($result);
 				$kills = $row["amount"];
 			}
 			// kills tf2
 			$query = "SELECT CONVERT(`kills` , UNSIGNED INTEGER) AS kills FROM `players` WHERE `username` = '" . $playername . "'";			
-			if ($result = mysqli_query($link5, $query))
-			{
+			if ($result = mysqli_query($link5, $query)) {
 				$row = mysqli_fetch_assoc($result);
 				mysqli_free_result($result);
 				$kills = $row["kills"] + $kills;
 			}
 			// deaths general
 			$query = "SELECT `amount` FROM `Stats_death` WHERE `cause` = 'Player' AND `player` = '" . $playername . "'";			
-			if ($result = mysqli_query($link3, $query))
-			{
+			if ($result = mysqli_query($link3, $query)) {
 				$row = mysqli_fetch_assoc($result);
 				mysqli_free_result($result);
 				$deaths = $row["amount"];
 			}
 			// deaths tf2
 			$query = "SELECT CONVERT(`deaths` , UNSIGNED INTEGER) AS deaths FROM `players` WHERE `username` = '" . $playername . "'";			
-			if ($result = mysqli_query($link5, $query))
-			{
+			if ($result = mysqli_query($link5, $query)) {
 				$row = mysqli_fetch_assoc($result);
 				mysqli_free_result($result);
 				$deaths = $row["deaths"] + $deaths;
 			}
 			$query = "SELECT `refkills`, `refdeaths` FROM `points` WHERE `playername` = '" . $playername . "'";			
-			if ($result = mysqli_query($link2, $query))
-			{
+			if ($result = mysqli_query($link2, $query))	{
 				$row = mysqli_fetch_assoc($result);
 				mysqli_free_result($result);
-				if (!empty($row))
-				{
+				if (!empty($row)) {
 					$refKills = $row["refkills"];
 					$refDeaths = $row["refdeaths"];
 				}
-				else 
-				{
+				else {
 					$refKills = 0;
 					$refDeaths = 0;
 					$query = "INSERT INTO `auradata`.`points` (
@@ -170,81 +156,67 @@
 			}
 			// Calcul des points en fonction des kills et des deaths
 			$points = (($kills - $refKills) - floor(($taux * ($deaths - $refDeaths ) / 100))) * 100;
-			if ($points <= 0)
-			{
+			if ($points <= 0) {
 				$points = 0;
 			}
-			else
-			{
+			else {
 				$query = "UPDATE `auradata`.`points` SET `refkills` = '" . $kills . "', `refdeaths` = '" . $deaths . "' WHERE `points`.`playername` = '" . $playername ."';";
 				mysqli_query($link2, $query);
 			}
 			// Calcul des points et deblocage des titres Paysan, Assassin, Bourreau, Barbare, Ecuyer, Chevalier, Seigneur, Sauron
 			$query = "SELECT `amount` FROM `Stats_kill` WHERE `type` = 'Player' AND `player` = '" . $playername ."'";
-			if ($result = mysqli_query($link3, $query))
-			{
+			if ($result = mysqli_query($link3, $query))	{
 				$row = mysqli_fetch_assoc($result);
 				mysqli_free_result($result);
 				$amount = $row["amount"];			
 				$query = "SELECT CONVERT(`kills` , UNSIGNED INTEGER) AS kills FROM `players` WHERE `username` = '" . mysqli_real_escape_string($link, $playername) ."'";			
-				if ($result = mysqli_query($link5, $query))
-				{
+				if ($result = mysqli_query($link5, $query))	{
 					$row2 = mysqli_fetch_assoc($result);
 					mysqli_free_result($result);
-					if (!empty($row2))
-					{
+					if (!empty($row2)) {
 						$amount = $row2["kills"] + $amount; 
 					}
 				}		
 				$query = "SELECT `hfPaysan` , `hfAssassin` , `hfBourreau` , `hfBarbare` FROM `points` WHERE `playername` = '" . $playername ."'";
-				if ($result = mysqli_query($link2, $query))
-				{
+				if ($result = mysqli_query($link2, $query)) {
 					$row = mysqli_fetch_assoc($result);
 					mysqli_free_result($result);
-					if ($amount >= 400 and $row["hfPaysan"] == 0)
-					{
+					if ($amount >= 400 and $row["hfPaysan"] == 0) {
 						$query = "UPDATE `auradata`.`points` SET `hfPaysan` = '1' WHERE `points`.`playername` = '" . $playername ."'";
 						mysqli_query($link2, $query);
 						$points += $hfpPaysan;
 					}
-					if ($amount >= 1000 and $row["hfAssassin"] == 0)
-					{
+					if ($amount >= 1000 and $row["hfAssassin"] == 0) {
 						$query = "UPDATE `auradata`.`points` SET `hfAssassin` = '1' WHERE `points`.`playername` = '" . $playername ."'";
 						mysqli_query($link2, $query);
 						$points += $hfpAssassin;
 					}
-					if ($amount >= 2500 and $row["hfBourreau"] == 0)
-					{
+					if ($amount >= 2500 and $row["hfBourreau"] == 0) {
 						$query = "UPDATE `auradata`.`points` SET `hfBourreau` = '1' WHERE `points`.`playername` = '" . $playername ."'";
 						mysqli_query($link2, $query);
 						$points += $hfpBourreau;
 					}					
-					if ($amount >= 10000 and $row["hfBarbare"] == 0)
-					{
+					if ($amount >= 10000 and $row["hfBarbare"] == 0) {
 						$query = "UPDATE `auradata`.`points` SET `hfBarbare` = '1' WHERE `points`.`playername` = '" . $playername ."'";
 						mysqli_query($link2, $query);
 						$points += $hfpBarbare;
 					}	
-					if ($amount >= 17500 and $row["hfEcuyer"] == 0)
-					{
+					if ($amount >= 17500 and $row["hfEcuyer"] == 0)	{
 						$query = "UPDATE `auradata`.`points` SET `hfEcuyer` = '1' WHERE `points`.`playername` = '" . $playername ."'";
 						mysqli_query($link2, $query);
 						$points += $hfpEcuyer;
 					}	
-					if ($amount >= 25000 and $row["hfChevalier"] == 0)
-					{
+					if ($amount >= 25000 and $row["hfChevalier"] == 0) {
 						$query = "UPDATE `auradata`.`points` SET `hfChevalier` = '1' WHERE `points`.`playername` = '" . $playername ."'";
 						mysqli_query($link2, $query);
 						$points += $hfpChevalier;
 					}	
-					if ($amount >= 35000 and $row["hfSeigneur"] == 0)
-					{
+					if ($amount >= 35000 and $row["hfSeigneur"] == 0) {
 						$query = "UPDATE `auradata`.`points` SET `hfSeigneur` = '1' WHERE `points`.`playername` = '" . $playername ."'";
 						mysqli_query($link2, $query);
 						$points += $hfpSeigneur;
 					}	
-					if ($amount >= 50000 and $row["hfSauron"] == 0)
-					{
+					if ($amount >= 50000 and $row["hfSauron"] == 0) {
 						$query = "UPDATE `auradata`.`points` SET `hfSauron` = '1' WHERE `points`.`playername` = '" . $playername ."'";
 						mysqli_query($link2, $query);
 						$points += $hfpSauron;
@@ -278,25 +250,21 @@
 			$query = "SELECT CONVERT(`points_captured`, UNSIGNEDINTEGER) AS points_captured, CONVERT(`games_won`, UNSIGNEDINTEGER) AS games_won
 						FROM `players`
 						WHERE `username` = '" . $playername ."'";
-			if ($result = mysqli_query($link5, $query))
-			{
+			if ($result = mysqli_query($link5, $query))	{
 				$row = mysqli_fetch_assoc($result);
 				mysqli_free_result($result);
 				$points_captured = $row["points_captured"];
 				$games_won = $row["games_won"];
 				$query = "SELECT `hfChampion` , `hfDominateur` FROM `points` WHERE `playername` = '" . $playername ."'";
-				if ($result = mysqli_query($link2, $query))
-				{
+				if ($result = mysqli_query($link2, $query))	{
 					$row = mysqli_fetch_assoc($result);
 					mysqli_free_result($result);
-					if ($games_won >= 2500 and $row["hfChampion"] == 0)
-					{
+					if ($games_won >= 2500 and $row["hfChampion"] == 0)	{
 						$query = "UPDATE `auradata`.`points` SET `hfChampion` = '1' WHERE `points`.`playername` = '" . $playername ."'";
 						mysqli_query($link2, $query);
 						$points += $hfpChampion;
 					}
-					if ($points_captured >= 2000 and $row["hfDominateur"] == 0)
-					{
+					if ($points_captured >= 2000 and $row["hfDominateur"] == 0)	{
 						$query = "UPDATE `auradata`.`points` SET `hfDominateur` = '1' WHERE `points`.`playername` = '" . $playername ."'";
 						mysqli_query($link2, $query);
 						$points += $hfpDominateur;
@@ -329,30 +297,25 @@
 			*/
 			// Calcul des points et deblocage des titres alcoolo
 			$query = "SELECT `alcoolo` FROM auradata.`alcoolo` WHERE `playername` = '" . $playername ."'";
-			if ($result = mysqli_query($link2, $query))
-			{
+			if ($result = mysqli_query($link2, $query))	{
 				$row = mysqli_fetch_assoc($result);
 				mysqli_free_result($result);
 				$amount = $row["alcoolo"];
 				$query = "SELECT `hfPochtron`, `hfIvrogne`, `hfBoitsanssoif` FROM `points` WHERE `playername` = '" . $playername ."'";
-				if ($result = mysqli_query($link2, $query))
-				{
+				if ($result = mysqli_query($link2, $query))	{
 					$row = mysqli_fetch_assoc($result);
 					mysqli_free_result($result);
-					if ($amount >= 10000 and $row["hfPochtron"] == 0)
-					{
+					if ($amount >= 10000 and $row["hfPochtron"] == 0) {
 						$query = "UPDATE `auradata`.`points` SET `hfPochtron` = '1' WHERE `points`.`playername` = '" . $playername ."'";
 						mysqli_query($link2, $query);
 						$points += $hfpbinouze1;
 					}
-					if ($amount >= 20000 and $row["hfIvrogne"] == 0)
-					{
+					if ($amount >= 20000 and $row["hfIvrogne"] == 0) {
 						$query = "UPDATE `auradata`.`points` SET `hfIvrogne` = '1' WHERE `points`.`playername` = '" . $playername ."'";
 						mysqli_query($link2, $query);
 						$points += $hfpbinouze2;
 					}				
-					if ($amount >= 30000 and $row["hfBoitsanssoif"] == 0)
-					{
+					if ($amount >= 30000 and $row["hfBoitsanssoif"] == 0) {
 						$query = "UPDATE `auradata`.`points` SET `hfBoitsanssoif` = '1' WHERE `points`.`playername` = '" . $playername ."'";
 						mysqli_query($link2, $query);
 						$points += $hfpbinouze3;
@@ -361,18 +324,15 @@
 			}
 			// Calcul des points et deblocage du titre Explorateur
 			$query = "SELECT `id` FROM `mcmmo_users` WHERE `user` ='" . $playername ."'";
-			if ($result = mysqli_query($link4, $query))
-			{
+			if ($result = mysqli_query($link4, $query))	{
 				$row = mysqli_fetch_assoc($result);
 				mysqli_free_result($result);
 				$query = "SELECT `excavation`, `fishing`, `herbalism`, `mining`, `woodcutting`, `axes`, `archery`, `swords`, `taming`, `unarmed` FROM `mcmmo_skills` WHERE `user_id` = " . $row["id"];
-				if ($result = mysqli_query($link4, $query))
-				{
+				if ($result = mysqli_query($link4, $query))	{
 					$rowmcMMo = mysqli_fetch_assoc($result);
 					mysqli_free_result($result);
 					$query = "SELECT `hfExplorateur` FROM `points` WHERE `playername` = '" . $playername ."'";
-					if ($result = mysqli_query($link2, $query))
-					{
+					if ($result = mysqli_query($link2, $query))	{
 						$row = mysqli_fetch_assoc($result);
 						mysqli_free_result($result);
 						if ($rowmcMMo["excavation"] >= 400 
@@ -385,8 +345,7 @@
 							and $rowmcMMo["swords"] >= 400 
 							and $rowmcMMo["taming"] >= 400 
 							and $rowmcMMo["unarmed"] >= 400 
-							and $row["hfExplorateur"] == 0)
-						{
+							and $row["hfExplorateur"] == 0)	{
 							$query = "UPDATE `auradata`.`points` SET `hfExplorateur` = '1' WHERE `points`.`playername` = '" . $playername ."'";
 							mysqli_query($link2, $query);
 							$points += $hfpExplorateur;
@@ -396,18 +355,15 @@
 			}				
 			// Calcul des points et deblocage du titre Spider
 			$query = "SELECT `amount` FROM `Stats_kill` WHERE `type` = 'Spider' and `player` = '" . $playername ."'";
-			if ($result = mysqli_query($link3, $query))
-			{
+			if ($result = mysqli_query($link3, $query)) {
 				$row = mysqli_fetch_assoc($result);
 				mysqli_free_result($result);
 				$amount = $row["amount"];
 				$query = "SELECT `hfSpiderKiller` FROM `points` WHERE `playername` = '" . $playername ."'";
-				if ($result = mysqli_query($link2, $query))
-				{
+				if ($result = mysqli_query($link2, $query))	{
 					$row = mysqli_fetch_assoc($result);
 					mysqli_free_result($result);
-					if ($amount >= 2000 and $row["hfSpiderKiller"] == 0)
-					{
+					if ($amount >= 2000 and $row["hfSpiderKiller"] == 0) {
 						$query = "UPDATE `auradata`.`points` SET `hfSpiderKiller` = '1' WHERE `points`.`playername` = '" . $playername ."'";
 						mysqli_query($link2, $query);
 						$points += $hfpSpiderKiller;
@@ -416,18 +372,15 @@
 			}	
 			// Calcul des points et deblocage du titre Creeper
 			$query = "SELECT `amount` FROM `Stats_kill` WHERE `type` = 'Creeper' and `player` = '" . $playername ."'";
-			if ($result = mysqli_query($link3, $query))
-			{
+			if ($result = mysqli_query($link3, $query))	{
 				$row = mysqli_fetch_assoc($result);
 				mysqli_free_result($result);
 				$amount = $row["amount"];
 				$query = "SELECT `hfCreeperKiller` FROM `points` WHERE `playername` = '" . $playername ."'";
-				if ($result = mysqli_query($link2, $query))
-				{
+				if ($result = mysqli_query($link2, $query))	{
 					$row = mysqli_fetch_assoc($result);
 					mysqli_free_result($result);
-					if ($amount >= 2000 and $row["hfCreeperKiller"] == 0)
-					{
+					if ($amount >= 2000 and $row["hfCreeperKiller"] == 0) {
 						$query = "UPDATE `auradata`.`points` SET `hfCreeperKiller` = '1' WHERE `points`.`playername` = '" . $playername ."'";
 						mysqli_query($link2, $query);
 						$points += $hfpCreeperKiller;
@@ -436,18 +389,15 @@
 			}				
 			// Calcul des points et deblocage du titre Zombie
 			$query = "SELECT `amount` FROM `Stats_kill` WHERE `type` = 'Zombie' and `player` = '" . $playername ."'";
-			if ($result = mysqli_query($link3, $query))
-			{
+			if ($result = mysqli_query($link3, $query))	{
 				$row = mysqli_fetch_assoc($result);
 				mysqli_free_result($result);
 				$amount = $row["amount"];
 				$query = "SELECT `hfZombieKiller` FROM `points` WHERE `playername` = '" . $playername ."'";
-				if ($result = mysqli_query($link2, $query))
-				{
+				if ($result = mysqli_query($link2, $query))	{
 					$row = mysqli_fetch_assoc($result);
 					mysqli_free_result($result);
-					if ($amount >= 2000 and $row["hfZombieKiller"] == 0)
-					{
+					if ($amount >= 2000 and $row["hfZombieKiller"] == 0) {
 						$query = "UPDATE `auradata`.`points` SET `hfZombieKiller` = '1' WHERE `points`.`playername` = '" . $playername ."'";
 						mysqli_query($link2, $query);
 						$points += $hfpZombieKiller;
@@ -456,18 +406,15 @@
 			}				
 			// Calcul des points et deblocage du titre Blaze
 			$query = "SELECT `amount` FROM `Stats_kill` WHERE `type` = 'Blaze' and `player` = '" . $playername ."'";
-			if ($result = mysqli_query($link3, $query))
-			{
+			if ($result = mysqli_query($link3, $query))	{
 				$row = mysqli_fetch_assoc($result);
 				mysqli_free_result($result);
 				$amount = $row["amount"];
 				$query = "SELECT `hfBlazeKiller` FROM `points` WHERE `playername` = '" . $playername ."'";
-				if ($result = mysqli_query($link2, $query))
-				{
+				if ($result = mysqli_query($link2, $query))	{
 					$row = mysqli_fetch_assoc($result);
 					mysqli_free_result($result);
-					if ($amount >= 2000 and $row["hfBlazeKiller"] == 0)
-					{
+					if ($amount >= 2000 and $row["hfBlazeKiller"] == 0)	{
 						$query = "UPDATE `auradata`.`points` SET `hfBlazeKiller` = '1' WHERE `points`.`playername` = '" . $playername ."'";
 						mysqli_query($link2, $query);
 						$points += $hfpBlazeKiller;
@@ -476,18 +423,15 @@
 			}		
 			// Calcul des points et deblocage du titre CaveSpider
 			$query = "SELECT `amount` FROM `Stats_kill` WHERE `type` = 'Cave_spider' and `player` = '" . $playername ."'";
-			if ($result = mysqli_query($link3, $query))
-			{
+			if ($result = mysqli_query($link3, $query))	{
 				$row = mysqli_fetch_assoc($result);
 				mysqli_free_result($result);
 				$amount = $row["amount"];
 				$query = "SELECT `hfCaveSpiderKiller` FROM `points` WHERE `playername` = '" . $playername ."'";
-				if ($result = mysqli_query($link2, $query))
-				{
+				if ($result = mysqli_query($link2, $query))	{
 					$row = mysqli_fetch_assoc($result);
 					mysqli_free_result($result);
-					if ($amount >= 2000 and $row["hfCaveSpiderKiller"] == 0)
-					{
+					if ($amount >= 2000 and $row["hfCaveSpiderKiller"] == 0) {
 						$query = "UPDATE `auradata`.`points` SET `hfCaveSpiderKiller` = '1' WHERE `points`.`playername` = '" . $playername ."'";
 						mysqli_query($link2, $query);
 						$points += $hfpCaveSpiderKiller;
@@ -496,18 +440,15 @@
 			}	
 			// Calcul des points et deblocage du titre Enderman
 			$query = "SELECT `amount` FROM `Stats_kill` WHERE `type` = 'Enderman' and `player` = '" . $playername ."'";
-			if ($result = mysqli_query($link3, $query))
-			{
+			if ($result = mysqli_query($link3, $query))	{
 				$row = mysqli_fetch_assoc($result);
 				mysqli_free_result($result);
 				$amount = $row["amount"];
 				$query = "SELECT `hfEndermanKiller` FROM `points` WHERE `playername` = '" . $playername ."'";
-				if ($result = mysqli_query($link2, $query))
-				{
+				if ($result = mysqli_query($link2, $query))	{
 					$row = mysqli_fetch_assoc($result);
 					mysqli_free_result($result);
-					if ($amount >= 2000 and $row["hfEndermanKiller"] == 0)
-					{
+					if ($amount >= 2000 and $row["hfEndermanKiller"] == 0)	{
 						$query = "UPDATE `auradata`.`points` SET `hfEndermanKiller` = '1' WHERE `points`.`playername` = '" . $playername ."'";
 						mysqli_query($link2, $query);
 						$points += $hfpEndermanKiller;
@@ -516,18 +457,15 @@
 			}				
 			// Calcul des points et deblocage du titre MagmaCube 
 			$query = "SELECT `amount` FROM `Stats_kill` WHERE `type` = 'Magma_cube' and `player` = '" . $playername ."'";
-			if ($result = mysqli_query($link3, $query))
-			{
+			if ($result = mysqli_query($link3, $query))	{
 				$row = mysqli_fetch_assoc($result);
 				mysqli_free_result($result);
 				$amount = $row["amount"];
 				$query = "SELECT `hfMagmaCubeKiller` FROM `points` WHERE `playername` = '" . $playername ."'";
-				if ($result = mysqli_query($link2, $query))
-				{
+				if ($result = mysqli_query($link2, $query))	{
 					$row = mysqli_fetch_assoc($result);
 					mysqli_free_result($result);
-					if ($amount >= 2000 and $row["hfMagmaCubeKiller"] == 0)
-					{
+					if ($amount >= 2000 and $row["hfMagmaCubeKiller"] == 0)	{
 						$query = "UPDATE `auradata`.`points` SET `hfMagmaCubeKiller` = '1' WHERE `points`.`playername` = '" . $playername ."'";
 						mysqli_query($link2, $query);
 						$points += $hfpMagmaCubeKiller;
@@ -536,18 +474,15 @@
 			}		
 			// Calcul des points et deblocage du titre PigZombie 
 			$query = "SELECT `amount` FROM `Stats_kill` WHERE `type` = 'Pig_zombie' and `player` = '" . $playername ."'";
-			if ($result = mysqli_query($link3, $query))
-			{
+			if ($result = mysqli_query($link3, $query))	{
 				$row = mysqli_fetch_assoc($result);
 				mysqli_free_result($result);
 				$amount = $row["amount"];
 				$query = "SELECT `hfPigZombieKiller` FROM `points` WHERE `playername` = '" . $playername ."'";
-				if ($result = mysqli_query($link2, $query))
-				{
+				if ($result = mysqli_query($link2, $query))	{
 					$row = mysqli_fetch_assoc($result);
 					mysqli_free_result($result);
-					if ($amount >= 2000 and $row["hfPigZombieKiller"] == 0)
-					{
+					if ($amount >= 2000 and $row["hfPigZombieKiller"] == 0)	{
 						$query = "UPDATE `auradata`.`points` SET `hfPigZombieKiller` = '1' WHERE `points`.`playername` = '" . $playername ."'";
 						mysqli_query($link2, $query);
 						$points += $hfpPigZombieKiller;
@@ -556,18 +491,15 @@
 			}				
 			// Calcul des points et deblocage du titre Skeleton 
 			$query = "SELECT `amount` FROM `Stats_kill` WHERE `type` = 'Skeleton' and `player` = '" . $playername ."'";
-			if ($result = mysqli_query($link3, $query))
-			{
+			if ($result = mysqli_query($link3, $query))	{
 				$row = mysqli_fetch_assoc($result);
 				mysqli_free_result($result);
 				$amount = $row["amount"];
 				$query = "SELECT `hfSkeletonKiller` FROM `points` WHERE `playername` = '" . $playername ."'";
-				if ($result = mysqli_query($link2, $query))
-				{
+				if ($result = mysqli_query($link2, $query))	{
 					$row = mysqli_fetch_assoc($result);
 					mysqli_free_result($result);
-					if ($amount >= 2000 and $row["hfSkeletonKiller"] == 0)
-					{
+					if ($amount >= 2000 and $row["hfSkeletonKiller"] == 0) {
 						$query = "UPDATE `auradata`.`points` SET `hfSkeletonKiller` = '1' WHERE `points`.`playername` = '" . $playername ."'";
 						mysqli_query($link2, $query);
 						$points += $hfpSkeletonKiller;
@@ -576,18 +508,15 @@
 			}							
 			// Calcul des points et deblocage du titre Slime 
 			$query = "SELECT `amount` FROM `Stats_kill` WHERE `type` = 'Slime' and `player` = '" . $playername ."'";
-			if ($result = mysqli_query($link3, $query))
-			{
+			if ($result = mysqli_query($link3, $query))	{
 				$row = mysqli_fetch_assoc($result);
 				mysqli_free_result($result);
 				$amount = $row["amount"];
 				$query = "SELECT `hfSlimeKiller` FROM `points` WHERE `playername` = '" . $playername ."'";
-				if ($result = mysqli_query($link2, $query))
-				{
+				if ($result = mysqli_query($link2, $query))	{
 					$row = mysqli_fetch_assoc($result);
 					mysqli_free_result($result);
-					if ($amount >= 2000 and $row["hfSlimeKiller"] == 0)
-					{
+					if ($amount >= 2000 and $row["hfSlimeKiller"] == 0)	{
 						$query = "UPDATE `auradata`.`points` SET `hfSlimeKiller` = '1' WHERE `points`.`playername` = '" . $playername ."'";
 						mysqli_query($link2, $query);
 						$points += $hfpSlimeKiller;
@@ -596,18 +525,15 @@
 			}			
 			// Calcul des points et deblocage du titre Wolf 
 			$query = "SELECT `amount` FROM `Stats_kill` WHERE `type` = 'Wolf' and `player` = '" . $playername ."'";
-			if ($result = mysqli_query($link3, $query))
-			{
+			if ($result = mysqli_query($link3, $query))	{
 				$row = mysqli_fetch_assoc($result);
 				mysqli_free_result($result);
 				$amount = $row["amount"];
 				$query = "SELECT `hfWolfKiller` FROM `points` WHERE `playername` = '" . $playername ."'";
-				if ($result = mysqli_query($link2, $query))
-				{
+				if ($result = mysqli_query($link2, $query))	{
 					$row = mysqli_fetch_assoc($result);
 					mysqli_free_result($result);
-					if ($amount >= 2000 and $row["hfWolfKiller"] == 0)
-					{
+					if ($amount >= 2000 and $row["hfWolfKiller"] == 0) {
 						$query = "UPDATE `auradata`.`points` SET `hfWolfKiller` = '1' WHERE `points`.`playername` = '" . $playername ."'";
 						mysqli_query($link2, $query);
 						$points += $hfpWolfKiller;
@@ -616,33 +542,27 @@
 			}
 			// Deblocage des titres Ferrailleur, Orfevre, Joailler
 			$query = "SELECT `id` FROM `mcmmo_users` WHERE `user` ='" . $playername ."'";
-			if ($result = mysqli_query($link4, $query))
-			{
+			if ($result = mysqli_query($link4, $query))	{
 				$row = mysqli_fetch_assoc($result);
 				mysqli_free_result($result);
 				$query = "SELECT `fishing` FROM `mcmmo_skills` WHERE `user_id` = " . $row["id"];
-				if ($result = mysqli_query($link4, $query))
-				{
+				if ($result = mysqli_query($link4, $query))	{
 					$row = mysqli_fetch_assoc($result);
 					mysqli_free_result($result);
 					$amount = $row["fishing"];
 					$query = "SELECT `hfFerrailleur`, `hfOrfevre`, `hfJoailler` FROM `points` WHERE `playername` = '" . $playername ."'";
-					if ($result = mysqli_query($link2, $query))
-					{
+					if ($result = mysqli_query($link2, $query))	{
 						$row = mysqli_fetch_assoc($result);
 						mysqli_free_result($result);
-						if ($amount >= 400 and $row["hfFerrailleur"] == 0)
-						{
+						if ($amount >= 400 and $row["hfFerrailleur"] == 0) {
 							$query = "UPDATE `auradata`.`points` SET `hfFerrailleur` = '1' WHERE `points`.`playername` = '" . $playername ."'";
 							mysqli_query($link2, $query);						
 						}
-						if ($amount >= 800 and $row["hfOrfevre"] == 0)
-						{
+						if ($amount >= 800 and $row["hfOrfevre"] == 0) {
 							$query = "UPDATE `auradata`.`points` SET `hfOrfevre` = '1' WHERE `points`.`playername` = '" . $playername ."'";
 							mysqli_query($link2, $query);							
 						}
-						if ($amount >= 1200 and $row["hfJoailler"] == 0)
-						{
+						if ($amount >= 1200 and $row["hfJoailler"] == 0) {
 							$query = "UPDATE `auradata`.`points` SET `hfJoailler` = '1' WHERE `points`.`playername` = '" . $playername ."'";
 							mysqli_query($link2, $query);							
 						}
@@ -651,11 +571,9 @@
 
 			}			
 			// maj du total des points
-			if ($points > 0)
-			{
+			if ($points > 0) {
 				$query = "SELECT `pointsTotal` FROM `points` WHERE `playername` = '" . $playername ."'";
-				if ($result = mysqli_query($link2, $query))
-				{
+				if ($result = mysqli_query($link2, $query))	{
 					$row = mysqli_fetch_assoc($result);
 					mysqli_free_result($result);
 					$pointsDispo = $points;
@@ -665,32 +583,26 @@
 				}
 			}
 			// envoyer les $points a la console
-			if ($points > 0)
-			{
+			if ($points > 0) {
 				$query = "SELECT `pointsDispo` FROM `points` WHERE `playername` = '" . $playername ."'";
-				if ($result = mysqli_query($link2, $query))
-				{
+				if ($result = mysqli_query($link2, $query))	{
 					$row = mysqli_fetch_assoc($result);
 					mysqli_free_result($result);			
-					try	
-					{
+					try	{
 						$Rcon = new MinecraftRcon;					
 						$Rcon->Connect( MQ_SERVER_ADDR, MQ_SERVER_PORT, MQ_SERVER_PASS, MQ_TIMEOUT );					
 						$Data = $Rcon->Command("eco give " . $playername . " " . $row["pointsDispo"]);					
-						if( $Data === false )
-						{
+						if( $Data === false ) {
 							throw new MinecraftRconException( "Failed to get command result." );
 						}
-						else if( StrLen( $Data ) == 0 )
-						{
+						else if( StrLen( $Data ) == 0 )	{
 							throw new MinecraftRconException( "Got command result, but it's empty." );
 						}
 						$query = "UPDATE `auradata`.`points` SET `pointsDispo` = '0' WHERE `points`.`playername` = '" . $playername ."'";
 						mysqli_query($link2, $query);
 						//echo HTMLSpecialChars( $Data );
 					}
-					catch( MinecraftRconException $e )
-					{
+					catch( MinecraftRconException $e ) {
 						//echo $e->getMessage( );
 					}
 					$Rcon->Disconnect( );

@@ -12,27 +12,24 @@ if ($argc == 5){
 	// mysql
 	// xauth
 	$link = mysqli_connect("localhost", "mysqlUser", "mysqlPassword", "mysqlDatabase");
-	if (mysqli_connect_errno())
-	{
+	if (mysqli_connect_errno())	{
 		exit();
 	}
 	// auradata
 	$link2 = mysqli_connect("localhost", "mysqlUser", "mysqlPassword", "mysqlDatabase");
-	if (mysqli_connect_errno())
-	{
+	if (mysqli_connect_errno())	{
 		exit();
 	}
 	// ./eco give pseudo valeur "raison"
-	if (strcmp($argv[1], 'give') == 0 && $argc == 5 && is_numeric($argv[3]))
-	{
+	if (strcmp($argv[1], 'give') == 0 && $argc == 5 && is_numeric($argv[3]))	{
 		$pseudo = $argv[2];
 		$points = $argv[3];
 		$raison = $argv[4];
 		$query = "SELECT `playername` FROM `accounts` where `active` = 1 and `playername` ='" . mysqli_real_escape_string($link, $pseudo)."'";
-		if ($result = mysqli_query($link, $query)){
+		if ($result = mysqli_query($link, $query)) {
 			$row = mysqli_fetch_assoc($result);
 			mysqli_free_result($result);
-			if (!empty($row)){
+			if (!empty($row)) {
 				$query = "SELECT `pointsTotal` FROM `points` WHERE `playername` = '" . $pseudo ."'";
 				if ($result = mysqli_query($link2, $query)){
 					$row = mysqli_fetch_assoc($result);
@@ -44,21 +41,21 @@ if ($argc == 5){
 						$Rcon = new MinecraftRcon;					
 						$Rcon->Connect(MQ_SERVER_ADDR, MQ_SERVER_PORT, MQ_SERVER_PASS, MQ_TIMEOUT);					
 						$Data = $Rcon->Command("eco give " . $pseudo . " " . $points);					
-						if ($Data === false){
+						if ($Data === false) {
 							throw new MinecraftRconException("Failed to get command result.");
 						}
-						else if(StrLen($Data) == 0){
+						else if (StrLen($Data) == 0) {
 							throw new MinecraftRconException("Got command result, but it's empty.");
 						}
 						$Data = $Rcon->Command("broadcast " . $pseudo . " obtient une recompense de " . $points . " points. Raison: ". $raison);					
 						if ($Data === false){
 							throw new MinecraftRconException("Failed to get command result.");
 						}
-						else if(StrLen($Data) == 0){
+						else if (StrLen($Data) == 0) {
 							throw new MinecraftRconException("Got command result, but it's empty.");
 						}	
 					}
-					catch( MinecraftRconException $e){
+					catch(MinecraftRconException $e){
 					}
 					$Rcon->Disconnect();
 				}
@@ -66,12 +63,12 @@ if ($argc == 5){
 		}
 	}
 	// ./eco take pseudo valeur "raison"
-	if (strcmp($argv[1], 'take') == 0 && $argc == 5 && is_numeric($argv[3])){
+	if (strcmp($argv[1], 'take') == 0 && $argc == 5 && is_numeric($argv[3])) {
 		$pseudo = $argv[2];
 		$points = $argv[3];
 		$raison = $argv[4];
 		$query = "SELECT `playername` FROM `accounts` where `active` = 1 and `playername` ='" . mysqli_real_escape_string($link, $pseudo)."'";
-		if ($result = mysqli_query($link, $query)){
+		if ($result = mysqli_query($link, $query)) {
 			$row = mysqli_fetch_assoc($result);
 			mysqli_free_result($result);
 			if (!empty($row)){
@@ -82,18 +79,18 @@ if ($argc == 5){
 					if ($Data === false){
 						throw new MinecraftRconException("Failed to get command result.");
 					}
-					else if(StrLen($Data) == 0){
+					else if (StrLen($Data) == 0) {
 						throw new MinecraftRconException("Got command result, but it's empty.");
 					}
 					$Data = $Rcon->Command("broadcast " . $pseudo . " obtient une amende de " . $points . " points. Raison: ". $raison);					
 					if ($Data === false){
 						throw new MinecraftRconException("Failed to get command result.");
 					}
-					else if(StrLen($Data) == 0){
+					else if (StrLen($Data) == 0) {
 						throw new MinecraftRconException("Got command result, but it's empty.");
 					}					
 				}
-				catch( MinecraftRconException $e){
+				catch(MinecraftRconException $e){
 				}
 				$Rcon->Disconnect();				
 			}
